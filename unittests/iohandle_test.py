@@ -1,5 +1,5 @@
 import unittest
-import input_output as io
+import iohandle
 import os
 import tempfile
 import gzip
@@ -24,7 +24,7 @@ class TestOutputHandling(OutputTestCase):
 
 	# Test list output
 	def test_list_output(self):
-		listOut = io.handleOutput([])
+		listOut = ioihandle.handleOutput([])
 		listOut.add(self.data1)
 		listOut.add(self.data2)
 		listOut.add(self.data3)
@@ -36,7 +36,7 @@ class TestOutputHandling(OutputTestCase):
 	# Test file output
 	def test_file_output(self):
 		# Add data to file and close
-		fileOut = io.handleOutput(self.fileName)
+		fileOut = iohandle.handleOutput(self.fileName)
 		fileOut.add(self.data1)
 		fileOut.add(self.data2)
 		fileOut.add(self.data3)
@@ -58,7 +58,7 @@ class TestOutputHandling(OutputTestCase):
 	# Test gzip file output
 	def test_gzfile_output(self):
 		# Add data to file and close
-		fileOut = io.handleOutput(self.fileNameGZ)
+		fileOut = iohandle.handleOutput(self.fileNameGZ)
 		fileOut.add(self.data1)
 		fileOut.add(self.data2)
 		fileOut.add(self.data3)
