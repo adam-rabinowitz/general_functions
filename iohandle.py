@@ -37,7 +37,7 @@ class OutputFile(object):
     
     # Function to initialise file output
     def __init__(self, output):
-        if output[-3:] == '.gz':
+        if output.endswith('.gz'):
             import gzip
             self.output = gzip.open(output, 'w')
         else:
@@ -80,7 +80,7 @@ class OutputPipe(object):
         return(self.output)
 
 
-def handle_output(output):
+def output(output):
     ''' Function takes a single argument termed 'output'. If 'output'
     is a string then a file output object (OutputFile) is returned. If
     the 'output' is a list then a list output object (OutputList) is

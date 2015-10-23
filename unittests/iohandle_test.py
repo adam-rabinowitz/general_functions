@@ -24,7 +24,7 @@ class TestOutputHandling(OutputTestCase):
 
 	# Test list output
 	def test_list_output(self):
-		listOut = ioihandle.handleOutput([])
+		listOut = iohandle.output([])
 		listOut.add(self.data1)
 		listOut.add(self.data2)
 		listOut.add(self.data3)
@@ -36,7 +36,7 @@ class TestOutputHandling(OutputTestCase):
 	# Test file output
 	def test_file_output(self):
 		# Add data to file and close
-		fileOut = iohandle.handleOutput(self.fileName)
+		fileOut = iohandle.output(self.fileName)
 		fileOut.add(self.data1)
 		fileOut.add(self.data2)
 		fileOut.add(self.data3)
@@ -58,7 +58,7 @@ class TestOutputHandling(OutputTestCase):
 	# Test gzip file output
 	def test_gzfile_output(self):
 		# Add data to file and close
-		fileOut = iohandle.handleOutput(self.fileNameGZ)
+		fileOut = iohandle.output(self.fileNameGZ)
 		fileOut.add(self.data1)
 		fileOut.add(self.data2)
 		fileOut.add(self.data3)
@@ -80,7 +80,7 @@ class TestOutputHandling(OutputTestCase):
 	# Test pipe output
 	def test_pipe_output(self):
 		pipeRecv, pipeSend = multiprocessing.Pipe(False)
-		pipeOut = io.handleOutput(pipeSend)
+		pipeOut = iohandle.output(pipeSend)
 		pipeOut.add(self.data1)
 		pipeOut.add(self.data2)
 		pipeOut.add(self.data3)
@@ -92,11 +92,11 @@ class TestOutputHandling(OutputTestCase):
 	# Test output type failure
 	def test_type_failure(self):
 		with self.assertRaises(TypeError):
-			testOut = io.handleOutput(3)
+			testOut = iohandle.output(3)
 
 	# Test file output failure
 	def test_file_failure(self):
-		fileOut = io.handleOutput(self.fileName)
+		fileOut = iohandle.output(self.fileName)
 		with self.assertRaises(TypeError):
 			fileOut.add(['a','b'],['c','d'])
 		fileOut.close()
