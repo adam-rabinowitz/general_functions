@@ -37,14 +37,33 @@ def writeFromPipe(fileName, pipes, shell = True):
     outFile.close()
     pipes[0].close()
 
-def writeFromPipeProcess(fileName, shell = True):
-    # Create pipes and process
-    pipes = multiprocessing.Pipe('False')
-    process = multiprocessing.Process(
-        target = writeFromPipe,
-        args = (fileName, pipes, shell)
-    )
-    process.start()
-    pipes[0].close()
-    # Return process and pipes
-    return(process, pipes[1])
+class writeProcessObject(object):
+    ''' Creates a class to handle writing output to a gzip file in a
+    seperate process. Object is intialised with two arguments:
+
+    1)  fileName - Full path to output file.
+    2)  shell - Boolean, indicating whether gzip fie should be written
+        using the shell 'gzip' command.
+
+    The object has two functions:
+
+    1)  write - Add the supplied string to output file.
+    2)  close - Close pipe, used to communicate with process, and join
+        process
+    '''
+
+    def __init__(self, fileName, shell = True):
+        self.pipes = multiprocessing.Pipe('False')
+        self.process = multiprocessing.Process(
+            target = writeFromPipe,
+            args = (fileName, self.pipes, shell)
+        )
+        self.process.start()
+        self.pipes[0].close()
+    
+    def add(self, input):
+        self.pipes[1].send(input)
+    
+    def close(self):
+        self.pipes[1].close()
+        self.process.join()
