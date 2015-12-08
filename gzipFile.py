@@ -1,4 +1,6 @@
 import subprocess
+import multiprocessing
+import gzip
 
 def writeFromPipe(fileName, pipes, shell = True):
     ''' Write FASTQ or FASTA file 
@@ -6,27 +8,24 @@ def writeFromPipe(fileName, pipes, shell = True):
     '''
     # Close unused pipes
     pipes[1].close()
+    # Create outut file
+    outFile = gzip.open(fileName, 'wb')
     # Create output file and use as stdout of subprocess
     if shell:
         # Create gzip subprocess
-        fileOut = gzip.open(fileName, 'wb')
-        sp = subprocess.Popen('gzip', stdout = fileOut,
+        sp = subprocess.Popen('gzip', stdout = outFile,
             stdin = subprocess.PIPE)
-        # Write to output file
+        # Write to output subprocess
         while True:
             try:
                 line = pipes[0].recv()
             except EOFError:
                 break
             sp.stdin.write(line)
-        # Close subprocess, files and pipes
+        # Terminate subprocess
         sp.communicate()
-        fileOut.close()
-        pipes[0].close()
     # Or create output file using pure python
     else:
-        # Create output file
-        outFile = gzip.open(fileName, 'w')
         # Write to output file
         while True:
             try:
@@ -34,16 +33,16 @@ def writeFromPipe(fileName, pipes, shell = True):
             except EOFError:
                 break
             outFile.write(read)
-        # Close files and pipes
-        outFile.close()
-        pipes[0].close()
+    # Close files and pipes
+    outFile.close()
+    pipes[0].close()
 
 def writeFromPipeProcess(fileName, shell = True):
     # Create pipes and process
     pipes = multiprocessing.Pipe('False')
     process = multiprocessing.Process(
         target = writeFromPipe,
-        args = (fastqFile, pipes)
+        args = (fileName, pipes, shell)
     )
     process.start()
     pipes[0].close()
