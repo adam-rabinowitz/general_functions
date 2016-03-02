@@ -2,9 +2,12 @@
 import subprocess
 import time
 import re
+import collections
 
-def submitjob(command, processor = 1, stdout = '/dev/null',
-    stderr = '/dev/null', dependency = None):
+def submitjob(
+        command, processor = 1, stdout = '/dev/null',
+        stderr = '/dev/null', dependency = None
+    ):
     ''' This function submits jobs to the farm using the MOAB software
     package and return the MOAB job identifier. The function takes 5
     arguments:
@@ -65,3 +68,95 @@ def submitjob(command, processor = 1, stdout = '/dev/null',
             time.sleep(10)
     # Stop process and return moabID
     return(moabID)
+
+class moabJobs(object):
+    
+    def __init__(self):
+        self.commandDict = collections.OrderedDict()
+    
+    def add(
+            self, command, processors = 1, stdout = '/dev/null',
+            stderr = '/dev/null', dependency = []
+        ):
+        ''' Command to add commands to job dictionary.'''
+        # Check dependencies
+        if isinstance(dependency, list):
+            for d in dependency:
+                if d not in self.commandDict:
+                    raise IOError('Dependencies must be present in object')
+        else:
+            raise IOError('Dependencies must be provided as a list')
+        # Check processor arguments
+        if not isinstance(processors, int):
+            raise IOError('processors argument must be an integer')
+        if processors < 0 and processors > 12:
+            raise IOError('processors argument must be >= 1 and <= 12')
+        # Modify input command
+        if isinstance(command, list):
+            command = ' '.join(command)
+        # Check stdout and stderr arguments
+        if not stdout.startswith('/'):
+            raise IOError('stdout argument must be an absolute filepath')
+        if not stderr.startswith('/'):
+            raise IOError('stderr argument must be an absolute filepath')
+        # Add command to dictionary and return command number
+        commandNo = len(self.commandDict)
+        self.commandDict[commandNo] = (
+            command,
+            processors,
+            stdout,
+            stderr,
+            dependency
+        )
+        return(commandNo)
+    
+    def submit(self):
+        # Create moab list and dictionary
+        moabList = []
+        # Extract commands and parameters
+        for commandNo in self.commandDict:
+            # Unpack parameters and store command
+            command, processors, stdout, stderr, dependency = (
+                self.commandDict[commandNo])
+            # Create msub command and add node informaion
+            msubCommand = ['/opt/moab/bin/msub', '-l']
+            msubCommand.append('nodes=1:babs:ppn=%s' %(processors))
+            # Add output information
+            if stdout == stderr:
+                msubCommand.extend(['-j', 'oe', '-o', stdout])
+            else:
+                msubCommand.extend(['-o', stdout, '-e', stderr])
+            # Add dependecy
+            dependList = []
+            for d in dependency:
+                dependList.append(moabList[d][1])
+            if dependList:
+                depend = 'x=depend:afterok:%s' %(':'.join(dependList))
+                msubCommand.extend(['-W', depend])
+            # Create output variable for function
+            moabID = None
+            # Try submit the job ten times
+            for _ in range(10):
+                # Create msub process
+                msubProcess = subprocess.Popen(
+                    msubCommand,
+                    stdin = subprocess.PIPE,
+                    stdout = subprocess.PIPE,
+                    stderr = subprocess.PIPE
+                )
+                # Submit command
+                moab = msubProcess.communicate(input=command)[0]
+                # Search for returned Moab ID
+                moabMatch = re.match('^\s+(Moab\\.\d+)\s+$',moab)
+                # Check that Moab ID has been returned or wait and repeat
+                if moabMatch:
+                    moabID = moabMatch.group(1)
+                    break
+                else:
+                    time.sleep(10)
+            # Stop process and return moabID
+            if moabID:
+                moabList.append((command, moabID))
+            else:
+                raise IOError('Could not submit moab job')
+        return(moabList)
