@@ -3,8 +3,9 @@ import subprocess
 import time
 import re
 import collections
+from general_python import toolbox
 
-def submitjob(
+def submitJob(
         command, processor = 1, stdout = '/dev/null',
         stderr = '/dev/null', dependency = None
     ):
@@ -110,12 +111,14 @@ class moabJobs(object):
         )
         return(commandNo)
     
-    def submit(self):
+    def submit(self, verbose = False):
+        # Check arguments
+        toolbox.checkArg(verbose, 'bool')
         # Create moab list and dictionary
         moabList = []
         # Extract commands and parameters
         for commandNo in self.commandDict:
-            # Unpack parameters and store command
+            # Unpack command and parameters
             command, processors, stdout, stderr, dependency = (
                 self.commandDict[commandNo])
             # Create msub command and add node informaion
@@ -129,7 +132,7 @@ class moabJobs(object):
             # Add dependecy
             dependList = []
             for d in dependency:
-                dependList.append(moabList[d][1])
+                dependList.append(moabList[d][0])
             if dependList:
                 depend = 'x=depend:afterok:%s' %(':'.join(dependList))
                 msubCommand.extend(['-W', depend])
@@ -154,9 +157,16 @@ class moabJobs(object):
                     break
                 else:
                     time.sleep(10)
-            # Stop process and return moabID
+            # Store succesfully commoted commands
             if moabID:
-                moabList.append((command, moabID))
+                moabList.append((moabID, command, processors, stdout, stderr,
+                    ' '.join(dependList)))
             else:
                 raise IOError('Could not submit moab job')
+            # Print commands if requested
+            if verbose:
+                print 'JOB ID: %s\nCOMMAND: %s\nPROCESSORS: %s\nSTDOUT: %s\n'\
+                    'STDERR: %s\nDEPENDENCIES: %s\n' %(moabID, command,
+                    processors, stdout, stderr, ' '.join(dependList))
+        # Save command to output file
         return(moabList)
