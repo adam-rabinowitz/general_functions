@@ -113,7 +113,7 @@ class moabJobs(object):
     
     def submit(self, verbose = False):
         # Check arguments
-        toolbox.checkArg(verbose, 'bool')
+        toolbox.check_var(verbose, 'bool')
         # Create moab list and dictionary
         moabList = []
         # Extract commands and parameters
