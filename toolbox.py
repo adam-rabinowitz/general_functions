@@ -1,90 +1,114 @@
 import os
 
-def checkArg(
-    arg, check, mn = None, mx = None, gt = None, lt = None
+def check_var(
+    variable, check, mn = None, mx = None, gt = None, lt = None
 ):
-    # Check argument is not Null
-    if arg is None:
+    ''' This fenction performs type and value checks on supplied
+    variables. It is intended that this function is used to perform
+    check on arguments supplied to funcions.
+    
+    Args:
+        variable: variable to check
+        check (str): check to perform must be one of:
+            'int' - integer.
+            'float' - float.
+            'num' - either float or integer.
+            'file' - string of an existing file path.
+            'exc' - string of an existing executable path.
+            'dir' - string of an existing directory path.
+            'bool' - boolean.
+        mn: minimum values for numeric variables.
+        mx: maximum values for numeric variables.
+        gt: greater than value for numeric variables.
+        lt: less than value for numeric variables.
+    
+    Returns:
+        bool: True if variable is of the expected type and value
+        or if the variable is None.
+    
+    Raises:
+        TypeError: if any of the arguments of the wrong type.
+        ValueError: if variable is of the wrong value.
+    
+    '''
+    # Return True if variable is None
+    if variable is None:
         return(True)
-    # Check intger arguments
+    # Check intger variable
     elif check == 'int':
-        # Check arg type
-        if not isinstance(arg, int):
-            raise TypeError('%s is not an integer' %(arg))
-    # Check float arguments
+        if not isinstance(variable, int):
+            raise TypeError('%s is not an integer' %(variable))
+    # Check float variable
     elif check == 'float':
-        # Check arg type
-        if not isinstance(arg, float):
-            raise TypeError('%s is not a floating point number' %(arg))
-    # Check numeric arguments
+        if not isinstance(variable, float):
+            raise TypeError('%s is not a floating point number' %(variable))
+    # Check numeric variable
     elif check == 'num':
-        # Check arg type
-        if not isinstance(arg, (int, float)):
-            raise TypeError('%s is not numeric' %(arg))
-    # Check file arguments
+        if not isinstance(variable, (int, float)):
+            raise TypeError('%s is not numeric' %(variable))
+    # Check file variable
     elif check == 'file':
-        # Check arg type
-        if not isinstance(arg, str):
-            raise TypeError('%s is not a string' %(arg))
-        # Check presence of file
-        if not os.path.isfile(arg):
-            raise TypeError('%s is not a file' %(arg))
-    # Check file arguments
+        if not isinstance(variable, str):
+            raise TypeError('%s is not a string' %(variable))
+        if not os.path.isfile(variable):
+            raise TypeError('%s is not a file' %(variable))
+    # Check executable variable
+    elif check == 'exc':
+        if not isinstance(variable, str):
+            raise TypeError('%s is not a string' %(variable))
+        if not os.path.isfile(variable) and os.access(variable, os.X_OK):
+            raise TypeError('%s in not executable' %(variable))
+    # Check file variable
     elif check == 'dir':
-        # Check arg type
-        if not isinstance(arg, str):
-            raise TypeError('%s is not a string' %(arg))
-        # Check presence of file
-        if not os.path.isdir(arg):
-            raise TypeError('%s is not a dir' %(arg))
-    # Check string arguments
+        if not isinstance(variable, str):
+            raise TypeError('%s is not a string' %(variable))
+        if not os.path.isdir(variable):
+            raise TypeError('%s is not a dir' %(variable))
+    # Check string variables
     elif check == 'str':
-        # Check arg type
-        if not isinstance(arg, str):
-            raise TypeError('%s is not an str' %(arg))
-    # Check boolean arguments
+        if not isinstance(variable, str):
+            raise TypeError('%s is not an str' %(variable))
+    # Check boolean variables
     elif check == 'bool':
-        # Check arg type
-        if not isinstance(arg, bool):
-            raise TypeError('%s is not boolean' %(arg))
+        if not isinstance(variable, bool):
+            raise TypeError('%s is not boolean' %(variable))
     # Else raise error if check arguemnt not recognised
     else:
-        raise IOError('check argument must be '\
-            'int|float|num|file|dir|str|bool')
+        raise IOError('check argument %s not recognised' %(check))
     # Check numerical arguments
     if check in ['int','float','num']:
         # Check minimum argument
         if isinstance(mn, (int, float)):
-            if mn > arg:
-                raise ValueError('%s < %s' %(arg, mn))
+            if mn > variable:
+                raise ValueError('%s < %s' %(variable, mn))
         elif mn is None:
             pass
         else:
-            raise IOError('mn argument must be numeric')
+            raise TypeError('mn argument must be numeric')
         # Check maximum value
         if isinstance(mx, (int, float)):
-            if mx < arg:
-                raise ValueError('%s > %s' %(arg, mx))
+            if mx < variable:
+                raise ValueError('%s > %s' %(variable, mx))
         elif mx is None:
             pass
         else:
-            raise IOError('mx argument must be numeric')
+            raise TypeError('mx argument must be numeric')
         # Check greater than argument
         if isinstance(gt, (int, float)):
-            if gt >= arg:
-                raise ValueError('%s <= %s' %(arg, gt))
+            if gt >= variable:
+                raise ValueError('%s <= %s' %(variable, gt))
         elif gt is None:
             pass
         else:
-            raise IOError('gt argument must be numeric')
+            raise TypeError('gt argument must be numeric')
         # Check less than argument
         if isinstance(lt, (int, float)):
-            if lt <= arg:
-                raise ValueError('%s >= %s' %(arg, gt))
+            if lt <= variable:
+                raise ValueError('%s >= %s' %(variable, gt))
         elif lt is None:
             pass
         else:
-            raise IOError('lt argument must be numeric')
+            raise TypeError('lt argument must be numeric')
     # Return true if no error raised
     return(True)
 
@@ -108,3 +132,75 @@ def fileDict(
             d[key] = value
     # Return value
     return(d)
+
+def factors(number):
+    ''' Function returns factors of positive integer. Function takes
+    a single argument:
+    
+    1)  n - A positive integer
+    '''
+    # Check supplied argument
+    check_var(number, 'int', gt = 0)
+    # Calculate and return factors
+    factors = [i for i in xrange(1, number + 1) if number % i == 0]
+    return(factors)
+
+def split_string(string, size):
+    ''' Function to split string into chunks of a desired size.
+    
+    Args:
+        string (str): String to split
+        size (int): size of chunks to return. Must be an intger > 0.
+    
+    Returns:
+        A list of strings of the specified size. The final element of
+        the list will be shorter than the specified size if the length
+        of the string is not a multiple of size.
+
+    '''
+    # Check arguments
+    check_var(string, 'str')
+    check_var(size, 'int', gt = 0)
+    # Split string into chunks of length n, store in list and return
+    chunk_list = [string[i : i + size] for i in range(0, len(string), size)]
+    return(chunk_list)
+
+def identical_list(l):
+    ''' Function to determine if all elements of a list are identical.
+    
+    Args:
+        l (list): Input list
+    
+    Returns:
+        True if all elements of list identical, False otherwise.
+    
+    '''
+    # Check arguments
+    if not isinstance(l, list):
+        raise TypeError('Argument must be a list')
+    if l.count(l[0]) == len(l):
+        return(True)
+    else:
+        return(False)
+
+def find_monomer(string):
+    ''' Function finds shortest monomer of a string.
+    
+    Args:
+        string (str): The input string
+    
+    Returns:
+        Function return a tuple of the following elements:
+        monomer (str): Sequence of the monomer.
+        count (int): Number of occurences of monomer in input string.
+    
+    '''
+    # Find lengths of monomers that can be generated from sequence
+    lengths = factors(len(string))
+    # Find shortest monomer
+    for l in lengths:
+        # Generate monomer
+        monomers = split_string(string, l)
+        # Return identical monomers
+        if identical_list(monomers):
+            return(monomers[0], len(monomers))
